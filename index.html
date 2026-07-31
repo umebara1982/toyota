@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【工程表】トヨタ自動車 新型EV展示プロジェクト</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Firebase SDK JS (v9.23.0 compat version) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    .gantt-container {
+      overflow-x: auto;
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+    }
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      background-color: white;
+      z-index: 20;
+    }
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background-color: #f3f4f6;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+  <!-- ヘッダー -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-full mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-chart-gantt text-red-500 text-2xl"></i>
+        <div>
+          <h1 class="text-xl font-bold leading-tight" id="sys-title">【工程表】トヨタ自動車 新型EV展示プロジェクト</h1>
+          <p class="text-xs text-slate-400">期間: <span id="sys-period">2026-09-01 〜 2027-03-31</span> | 目標日: <span id="sys-target" class="text-amber-400 font-semibold">2026-12-15(火)</span></p>
+        </div>
+      </div>
+
+      <!-- 操作ボタン群 -->
+      <div class="flex items-center gap-2 flex-wrap text-sm">
+        <button onclick="openAddTaskModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+          <i class="fa-solid fa-plus"></i> タスク追加
+        </button>
+        <button onclick="downloadManual()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+          <i class="fa-solid fa-book"></i> マニュアルDL
+        </button>
+        <button onclick="openAdminModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1">
+          <i class="fa-solid fa-user-shield"></i> 管理者メニュー
+        </button>
+        <span id="sync-status" class="inline-flex items-center gap-1 text-xs bg-slate-800 text-slate-400 px-2.5 py-1.5 rounded-full border border-slate-700">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" id="sync-dot"></span>
+          <span id="sync-text">接続準備中...</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-full mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <section class="lg:col-span-8 bg-white rounded-xl shadow border border-slate-200 p-4 flex flex-col">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-blue-600"></i> 工程スケジューラー
+        </h2>
+        <div class="flex gap-2">
+          <input type="text" id="search-input" oninput="renderGantt()" placeholder="タスク検索/担当検索..." class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div class="gantt-container border border-slate-200 rounded-lg flex-1 bg-white relative" id="gantt-wrapper">
+        <table class="w-full text-left text-xs border-collapse" id="gantt-table"></table>
+      </div>
+    </section>
+
+    <!-- ダッシュボード -->
+    <section class="lg:col-span-4 space-y-4">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-white p-3 rounded-xl shadow border border-slate-200 text-center">
+          <p class="text-xs text-slate-500">全体進捗率</p>
+          <p class="text-2xl font-black text-blue-600 mt-1" id="kpi-progress">0%</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl shadow border border-slate-200 text-center">
+          <p class="text-xs text-slate-500">最重要CP進行状況</p>
+          <p class="text-2xl font-black text-emerald-600 mt-1" id="kpi-cp-status">0/0</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow border border-red-200 p-4">
+        <h3 class="font-bold text-red-600 text-sm flex items-center gap-1.5 mb-2">
+          <i class="fa-solid fa-triangle-exclamation"></i> 遅延・警告タスク
+        </h3>
+        <div id="delayed-tasks-list" class="space-y-1.5 max-h-36 overflow-y-auto pr-1 text-xs"></div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow border border-slate-200 p-4">
+        <h3 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-indigo-500"></i> 関係会社別タスク負荷
+        </h3>
+        <div class="relative h-48">
+          <canvas id="companyChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow border border-slate-200 p-4">
+        <h3 class="font-bold text-amber-600 text-sm flex items-center gap-1.5 mb-2">
+          <i class="fa-solid fa-pause-circle"></i> 保留中タスク
+        </h3>
+        <ul id="pending-tasks-list" class="space-y-1.5 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- モーダル: タスク追加/編集 -->
+  <div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm" id="modal-title">タスク追加</h3>
+        <button onclick="closeTaskModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="task-form" onsubmit="handleTaskSubmit(event)" class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="task-id-key">
+        <div>
+          <label class="block font-semibold mb-1">ID (例: 1.3)</label>
+          <input type="text" id="task-id" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">カテゴリー</label>
+          <select id="task-cat" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="1">📂 1: 車両仕様確定・設計</option>
+            <option value="2">📂 2: ブースデザイン・施工手配</option>
+            <option value="3">📂 3: 制御システム開発</option>
+            <option value="4">📂 4: 現場施工・テスト</option>
+            <option value="5">📂 5: グランドオープン・運用</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">タスク名</label>
+          <input type="text" id="task-name" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">担当会社</label>
+          <select id="task-assignee" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="トヨタ自動車">トヨタ自動車</option>
+            <option value="デンソー">デンソー</option>
+            <option value="デザイン会社">デザイン会社</option>
+            <option value="全社合同">全社合同</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">開始日</label>
+            <input type="date" id="task-start" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">終了日</label>
+            <input type="date" id="task-end" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 items-center pt-1">
+          <div>
+            <label class="block font-semibold mb-1">ステータス</label>
+            <select id="task-status" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="未着手">未着手</option>
+              <option value="進行中">進行中</option>
+              <option value="保留中">保留中</option>
+              <option value="完了">完了</option>
+            </select>
+          </div>
+          <div class="flex items-center pt-5">
+            <input type="checkbox" id="task-cp" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
+            <label for="task-cp" class="ml-2 font-semibold text-red-600 flex items-center gap-1">
+              <i class="fa-solid fa-star"></i> 最重要CP
+            </label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeTaskModal()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded font-semibold text-slate-700">キャンセル</button>
+          <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- モーダル: 管理者メニュー -->
+  <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+      <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-lock text-amber-400"></i> 管理者メニュー (裏メニュー)</h3>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="admin-auth" class="p-6 text-center text-xs space-y-3">
+        <p class="text-slate-600">管理者認証が必要です。パスワードを入力してください。</p>
+        <input type="password" id="admin-pass" placeholder="パスワード (初期: 0705)" class="border border-slate-300 rounded px-3 py-2 w-48 text-center text-base outline-none focus:ring-2 focus:ring-slate-800">
+        <div>
+          <button onclick="verifyAdminPass()" class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 font-semibold transition">認証する</button>
+        </div>
+      </div>
+      <div id="admin-panel" class="p-5 hidden space-y-4 text-xs">
+        <div class="p-3 bg-slate-50 border rounded-lg space-y-2">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1"><i class="fa-solid fa-database"></i> データバックアップ＆復元</h4>
+          <div class="flex gap-2">
+            <button onclick="createBackup()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded font-semibold transition"><i class="fa-solid fa-download"></i> バックアップ作成</button>
+            <label class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded font-semibold transition text-center cursor-pointer">
+              <i class="fa-solid fa-upload"></i> バックアップ復元
+              <input type="file" id="restore-file" onchange="restoreBackup(event)" class="hidden" accept=".json">
+            </label>
+          </div>
+          <button onclick="clearDatabase()" class="w-full bg-red-500 hover:bg-red-600 text-white py-1.5 rounded font-semibold transition mt-1"><i class="fa-solid fa-trash"></i> データベース完全初期化</button>
+        </div>
+        <div class="p-3 bg-slate-50 border rounded-lg space-y-2">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1"><i class="fa-solid fa-list-ol"></i> ID一括振り直し</h4>
+          <button onclick="reorderTaskIDs()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded font-semibold transition"><i class="fa-solid fa-wand-magic-sparkles"></i> ID一括自動振り直し実行</button>
+        </div>
+        <div class="p-3 bg-slate-50 border rounded-lg space-y-2">
+          <h4 class="font-bold text-slate-800 flex items-center gap-1"><i class="fa-solid fa-code"></i> システムソースコード</h4>
+          <button onclick="copyHTMLCode()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-1.5 rounded font-semibold transition"><i class="fa-solid fa-copy"></i> 完全版HTMLコードをコピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      adminPass: "0705",
+      startDate: "2026-09-01",
+      endDate: "2027-03-31",
+      targetDate: "2026-12-15"
+    };
+
+    const CATEGORIES = {
+      1: "📂 カテゴリー 1：車両仕様確定・設計",
+      2: "📂 カテゴリー 2：ブースデザイン・施工手配",
+      3: "📂 カテゴリー 3：制御システム開発",
+      4: "📂 カテゴリー 4：現場施工・テスト",
+      5: "📂 カテゴリー 5：グランドオープン・運用"
+    };
+
+    const INITIAL_TASKS = [
+      { idKey: "t1", id: "1.1", cat: 1, name: "基本仕様打ち合わせ", assignee: "トヨタ自動車", start: "2026-09-01", end: "2026-09-15", status: "完了", cp: true },
+      { idKey: "t2", id: "1.2", cat: 1, name: "制御通信プロトコル策定", assignee: "デンソー", start: "2026-09-10", end: "2026-09-30", status: "進行中", cp: true },
+      { idKey: "t3", id: "1.3", cat: 1, name: "展示用車両改造・配線設計", assignee: "トヨタ自動車", start: "2026-09-20", end: "2026-10-20", status: "未着手", cp: false },
+      { idKey: "t4", id: "2.1", cat: 2, name: "展示ブース空間デザイン", assignee: "デザイン会社", start: "2026-09-15", end: "2026-10-15", status: "進行中", cp: false },
+      { idKey: "t5", id: "2.2", cat: 2, name: "資材手配＆施工チーム確定", assignee: "デザイン会社", start: "2026-10-10", end: "2026-11-05", status: "未着手", cp: true },
+      { idKey: "t6", id: "3.1", cat: 3, name: "EV情報表示モニターアプリ開発", assignee: "デンソー", start: "2026-09-25", end: "2026-11-15", status: "進行中", cp: true },
+      { idKey: "t7", id: "3.2", cat: 3, name: "体験用シミュレータ連動検証", assignee: "デンソー", start: "2026-11-01", end: "2026-11-25", status: "保留中", cp: false },
+      { idKey: "t8", id: "4.1", cat: 4, name: "会場ブース設営施工", assignee: "デザイン会社", start: "2026-11-20", end: "2026-12-05", status: "未着手", cp: true },
+      { idKey: "t9", id: "4.2", cat: 4, name: "全社合同 総合リハーサル", assignee: "全社合同", start: "2026-12-06", end: "2026-12-12", status: "未着手", cp: true },
+      { idKey: "t10", id: "5.1", cat: 5, name: "グランドオープン・メディア対応", assignee: "全社合同", start: "2026-12-15", end: "2026-12-20", status: "未着手", cp: true },
+      { idKey: "t11", id: "5.2", cat: 5, name: "会期中運用＆システム保守", assignee: "全社合同", start: "2026-12-21", end: "2027-03-31", status: "未着手", cp: false }
+    ];
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    let tasksData = [];
+    let dbRef = null;
+    let isFirebaseConnected = false;
+
+    try {
+      if (firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("YOUR_PROJECT")) {
+        firebase.initializeApp(firebaseConfig);
+        dbRef = firebase.database().ref("gantt_tasks");
+        isFirebaseConnected = true;
+      }
+    } catch (e) {
+      console.warn("Firebase初期化スキップ", e);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initCompanyChart();
+      if (isFirebaseConnected && dbRef) {
+        document.getElementById("sync-text").innerText = "Firebase 連携中";
+        document.getElementById("sync-dot").className = "w-2 h-2 rounded-full bg-emerald-500 animate-ping";
+        dbRef.on("value", (snapshot) => {
+          const val = snapshot.val();
+          tasksData = val ? (Array.isArray(val) ? val : Object.values(val)) : INITIAL_TASKS;
+          if (!val) dbRef.set(tasksData);
+          refreshUI();
+        });
+      } else {
+        document.getElementById("sync-text").innerText = "ローカル動作中";
+        document.getElementById("sync-dot").className = "w-2 h-2 rounded-full bg-blue-500";
+        const local = localStorage.getItem("gantt_tasks_local");
+        tasksData = local ? JSON.parse(local) : INITIAL_TASKS;
+        if (!local) saveTasksLocally();
+        refreshUI();
+      }
+    });
+
+    function saveTasksData() {
+      if (isFirebaseConnected && dbRef) {
+        dbRef.set(tasksData);
+      } else {
+        saveTasksLocally();
+        refreshUI();
+      }
+    }
+
+    function saveTasksLocally() {
+      localStorage.setItem("gantt_tasks_local", JSON.stringify(tasksData));
+    }
+
+    function refreshUI() {
+      renderGantt();
+      updateDashboard();
+    }
+
+    function renderGantt() {
+      const searchKeyword = document.getElementById("search-input").value.toLowerCase();
+      const table = document.getElementById("gantt-table");
+      table.innerHTML = "";
+
+      const dateList = generateDateArray(CONFIG.startDate, CONFIG.endDate);
+
+      let thead = `<thead class="sticky-header">
+        <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300">
+          <th class="p-2 border-r border-slate-300 sticky-col min-w-[200px]">ID / タスク名</th>
+          <th class="p-2 border-r border-slate-300 w-20 text-center">担当</th>
+          <th class="p-2 border-r border-slate-300 w-20 text-center">状態</th>
+          <th class="p-2 border-r border-slate-300 w-16 text-center">操作</th>`;
+      
+      dateList.forEach(d => {
+        const isTarget = d === CONFIG.targetDate;
+        const bg = isTarget ? "bg-amber-300 text-slate-900" : "bg-slate-100 text-slate-600";
+        thead += `<th class="px-1 py-1 text-[10px] text-center border-r border-slate-200 min-w-[24px] ${bg}">${d.slice(5)}</th>`;
+      });
+      thead += `</tr></thead>`;
+
+      let tbody = `<tbody>`;
+
+      for (let catKey = 1; catKey <= 5; catKey++) {
+        const catTasks = tasksData.filter(t => t.cat == catKey && (
+          t.name.toLowerCase().includes(searchKeyword) || 
+          t.assignee.toLowerCase().includes(searchKeyword) ||
+          t.id.includes(searchKeyword)
+        ));
+
+        tbody += `<tr class="bg-slate-800 text-white font-bold">
+          <td colspan="${4 + dateList.length}" class="p-2 text-xs sticky-col">${CATEGORIES[catKey]}</td>
+        </tr>`;
+
+        if (catTasks.length === 0) {
+          tbody += `<tr><td colspan="${4 + dateList.length}" class="p-2 text-slate-400 italic text-center">該当するタスクはありません</td></tr>`;
+        } else {
+          catTasks.forEach(task => {
+            const isDelayed = checkIsDelayed(task);
+            const statusColor = getStatusColorClass(task.status);
+
+            tbody += `<tr id="task-row-${task.idKey}" class="hover:bg-slate-50 border-b border-slate-200 transition">
+              <td class="p-2 border-r border-slate-200 sticky-col font-medium flex items-center gap-1.5">
+                ${task.cp ? '<i class="fa-solid fa-star text-red-500" title="CP"></i>' : ''}
+                <span class="text-slate-500 text-[11px] font-mono">${task.id}</span>
+                <span class="${isDelayed ? 'text-red-600 font-bold' : 'text-slate-800'}">${escapeHTML(task.name)}</span>
+              </td>
+              <td class="p-1 border-r border-slate-200 text-center text-[11px]">${escapeHTML(task.assignee)}</td>
+              <td class="p-1 border-r border-slate-200 text-center">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white ${statusColor}">${task.status}</span>
+              </td>
+              <td class="p-1 border-r border-slate-200 text-center">
+                <button onclick="openEditTaskModal('${task.idKey}')" class="text-blue-600 hover:text-blue-800 mr-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteTask('${task.idKey}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+              </td>`;
+
+            dateList.forEach(d => {
+              const inRange = d >= task.start && d <= task.end;
+              let cellBg = "";
+              if (inRange) {
+                if (task.status === "完了") cellBg = "bg-emerald-500";
+                else if (task.status === "保留中") cellBg = "bg-amber-400";
+                else if (isDelayed) cellBg = "bg-red-500 animate-pulse";
+                else cellBg = "bg-blue-500";
+              }
+              const isTargetDay = d === CONFIG.targetDate;
+              const borderStyle = isTargetDay ? "border-x-2 border-x-amber-400" : "border-r border-slate-100";
+              tbody += `<td class="p-0 text-center ${borderStyle} ${cellBg}" title="${task.name}"></td>`;
+            });
+
+            tbody += `</tr>`;
+          });
+        }
+      }
+
+      tbody += `</tbody>`;
+      table.innerHTML = thead + tbody;
+    }
+
+    let companyChartInstance = null;
+
+    function updateDashboard() {
+      if (tasksData.length === 0) return;
+
+      const completedCount = tasksData.filter(t => t.status === "完了").length;
+      document.getElementById("kpi-progress").innerText = `${Math.round((completedCount / tasksData.length) * 100)}%`;
+
+      const cpTasks = tasksData.filter(t => t.cp);
+      const cpCompleted = cpTasks.filter(t => t.status === "完了").length;
+      document.getElementById("kpi-cp-status").innerText = `${cpCompleted} / ${cpTasks.length}`;
+
+      const delayedTasks = tasksData.filter(t => checkIsDelayed(t));
+      const delayedContainer = document.getElementById("delayed-tasks-list");
+      delayedContainer.innerHTML = delayedTasks.length === 0 
+        ? `<p class="text-slate-400 italic">遅延タスクはありません</p>`
+        : delayedTasks.map(t => `
+          <div onclick="scrollToTask('${t.idKey}')" class="p-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded cursor-pointer transition flex justify-between items-center">
+            <div>
+              <span class="font-bold text-red-700">${t.id} ${escapeHTML(t.name)}</span>
+              <p class="text-[10px] text-red-500">期限: ${t.end} (${t.assignee})</p>
+            </div>
+            <i class="fa-solid fa-arrow-right-to-bracket text-red-400"></i>
+          </div>
+        `).join("");
+
+      const pendingTasks = tasksData.filter(t => t.status === "保留中");
+      const pendingContainer = document.getElementById("pending-tasks-list");
+      pendingContainer.innerHTML = pendingTasks.length === 0
+        ? `<p class="text-slate-400 italic">保留中のタスクはありません</p>`
+        : pendingTasks.map(t => `
+          <li class="py-1 flex justify-between items-center">
+            <span class="font-medium">${t.id} ${escapeHTML(t.name)}</span>
+            <span class="text-slate-400 text-[10px]">${t.assignee}</span>
+          </li>
+        `).join("");
+
+      updateCompanyChart();
+    }
+
+    function initCompanyChart() {
+      const ctx = document.getElementById("companyChart").getContext("2d");
+      companyChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } } } }
+      });
+    }
+
+    function updateCompanyChart() {
+      if (!companyChartInstance) return;
+      const companyCounts = {};
+      tasksData.forEach(t => companyCounts[t.assignee] = (companyCounts[t.assignee] || 0) + 1);
+      companyChartInstance.data.labels = Object.keys(companyCounts);
+      companyChartInstance.data.datasets[0].data = Object.values(companyCounts);
+      companyChartInstance.update();
+    }
+
+    function scrollToTask(idKey) {
+      const row = document.getElementById(`task-row-${idKey}`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.classList.add("bg-amber-100");
+        setTimeout(() => row.classList.remove("bg-amber-100"), 2000);
+      }
+    }
+
+    function openAddTaskModal() {
+      document.getElementById("modal-title").innerText = "タスク新規追加";
+      document.getElementById("task-form").reset();
+      document.getElementById("task-id-key").value = "";
+      document.getElementById("task-modal").classList.remove("hidden");
+    }
+
+    function openEditTaskModal(idKey) {
+      const task = tasksData.find(t => t.idKey === idKey);
+      if (!task) return;
+      document.getElementById("modal-title").innerText = "タスク編集";
+      document.getElementById("task-id-key").value = task.idKey;
+      document.getElementById("task-id").value = task.id;
+      document.getElementById("task-cat").value = task.cat;
+      document.getElementById("task-name").value = task.name;
+      document.getElementById("task-assignee").value = task.assignee;
+      document.getElementById("task-start").value = task.start;
+      document.getElementById("task-end").value = task.end;
+      document.getElementById("task-status").value = task.status;
+      document.getElementById("task-cp").checked = task.cp;
+      document.getElementById("task-modal").classList.remove("hidden");
+    }
+
+    function closeTaskModal() {
+      document.getElementById("task-modal").classList.add("hidden");
+    }
+
+    function handleTaskSubmit(e) {
+      e.preventDefault();
+      const idKey = document.getElementById("task-id-key").value || "t_" + Date.now();
+      const newTask = {
+        idKey: idKey,
+        id: document.getElementById("task-id").value,
+        cat: parseInt(document.getElementById("task-cat").value),
+        name: document.getElementById("task-name").value,
+        assignee: document.getElementById("task-assignee").value,
+        start: document.getElementById("task-start").value,
+        end: document.getElementById("task-end").value,
+        status: document.getElementById("task-status").value,
+        cp: document.getElementById("task-cp").checked
+      };
+
+      const existingIndex = tasksData.findIndex(t => t.idKey === idKey);
+      if (existingIndex >= 0) tasksData[existingIndex] = newTask;
+      else tasksData.push(newTask);
+
+      saveTasksData();
+      closeTaskModal();
+    }
+
+    function deleteTask(idKey) {
+      if (confirm("このタスクを削除してもよろしいですか？")) {
+        tasksData = tasksData.filter(t => t.idKey !== idKey);
+        saveTasksData();
+      }
+    }
+
+    function openAdminModal() { document.getElementById("admin-modal").classList.remove("hidden"); }
+    function closeAdminModal() { document.getElementById("admin-modal").classList.add("hidden"); }
+
+    function verifyAdminPass() {
+      if (document.getElementById("admin-pass").value === CONFIG.adminPass) {
+        document.getElementById("admin-auth").classList.add("hidden");
+        document.getElementById("admin-panel").classList.remove("hidden");
+      } else {
+        alert("パスワードが正しくありません。");
+      }
+    }
+
+    function createBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasksData, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `gantt_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function restoreBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (Array.isArray(importedData)) {
+            tasksData = importedData;
+            saveTasksData();
+            alert("バックアップデータを正常に復元しました。");
+          }
+        } catch (err) { alert("JSONの読み込みに失敗しました。"); }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearDatabase() {
+      if (confirm("本当に初期化しますか？")) {
+        tasksData = INITIAL_TASKS;
+        saveTasksData();
+        alert("初期化しました。");
+      }
+    }
+
+    function reorderTaskIDs() {
+      for (let catKey = 1; catKey <= 5; catKey++) {
+        let subId = 1;
+        tasksData.forEach(task => { if (task.cat == catKey) task.id = `${catKey}.${subId++}`; });
+      }
+      saveTasksData();
+      alert("IDを振り直しました。");
+    }
+
+    function copyHTMLCode() {
+      navigator.clipboard.writeText(document.documentElement.outerHTML).then(() => {
+        alert("完全版HTMLコードをクリップボードにコピーしました！");
+      });
+    }
+
+    function downloadManual() {
+      const manualContent = `【取扱説明書】ガントチャートシステム\n\n発行: トヨタ自動車 新型EV展示プロジェクト事務局`;
+      const blob = new Blob([manualContent], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "ガントチャートシステム_操作マニュアル.txt";
+      a.click();
+    }
+
+    function generateDateArray(startStr, endStr) {
+      const dates = [];
+      let curr = new Date(startStr);
+      const end = new Date(endStr);
+      while (curr <= end) {
+        dates.push(curr.toISOString().split("T")[0]);
+        curr.setDate(curr.getDate() + 1);
+      }
+      return dates;
+    }
+
+    function checkIsDelayed(task) {
+      if (task.status === "完了") return false;
+      const today = new Date().toISOString().split("T")[0];
+      return task.end < today;
+    }
+
+    function getStatusColorClass(status) {
+      switch (status) {
+        case "完了": return "bg-emerald-500";
+        case "進行中": return "bg-blue-500";
+        case "保留中": return "bg-amber-500";
+        default: return "bg-slate-400";
+      }
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+      });
+    }
+  </script>
+</body>
+</html>
