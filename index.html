@@ -1,0 +1,843 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="ja"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;【工程表】トヨタ自動車 新型EV展示プロジェクト&lt;/title&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Tailwind CSS CDN --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Chart.js CDN --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Firebase SDK JS (v9.23.0 compat version) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- FontAwesome --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* ガントチャート用スクロール＆固定ヘッダー調整 */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.gantt-container {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>overflow-x: auto;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-height: calc(100vh - 280px);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>overflow-y: auto;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.sticky-col {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: sticky;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>left: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: white;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>z-index: 20;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.sticky-header {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: sticky;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>z-index: 30;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-color: #f3f4f6;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* カスタムスクロールバー */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>::-webkit-scrollbar {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>::-webkit-scrollbar-track {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #f1f1f1;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>::-webkit-scrollbar-thumb {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #c1c1c1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 4px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>::-webkit-scrollbar-thumb:hover {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #a8a8a8;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-slate-100 font-sans text-slate-800 antialiased"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- ヘッダー --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;header class="bg-slate-900 text-white shadow-md sticky top-0 z-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="max-w-full mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex items-center space-x-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;i class="fa-solid fa-chart-gantt text-red-500 text-2xl"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h1 class="text-xl font-bold leading-tight" id="sys-title"&gt;【工程表】トヨタ自動車 新型EV展示プロジェクト&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-xs text-slate-400"&gt;期間: &lt;span id="sys-period"&gt;2026-09-01 〜 2027-03-31&lt;/span&gt; | 目標日: &lt;span id="sys-target" class="text-amber-400 font-semibold"&gt;2026-12-15(火)&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- 操作ボタン群 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex items-center gap-2 flex-wrap text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="openAddTaskModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt; タスク追加</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="downloadManual()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-book"&gt;&lt;/i&gt; マニュアルDL</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="openAdminModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-user-shield"&gt;&lt;/i&gt; 管理者メニュー</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Firebase同期ステータス表示 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span id="sync-status" class="inline-flex items-center gap-1 text-xs bg-slate-800 text-slate-400 px-2.5 py-1.5 rounded-full border border-slate-700"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" id="sync-dot"&gt;&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span id="sync-text"&gt;接続準備中...&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- メインコンテンツ (2カラム構成) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;main class="max-w-full mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 左側: ガントチャートエリア (8列) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;section class="lg:col-span-8 bg-white rounded-xl shadow border border-slate-200 p-4 flex flex-col"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="flex justify-between items-center mb-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h2 class="text-lg font-bold text-slate-700 flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-list-check text-blue-600"&gt;&lt;/i&gt; 工程スケジューラー</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input type="text" id="search-input" oninput="renderGantt()" placeholder="タスク検索/担当検索..." class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- ガントチャート本体 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="gantt-container border border-slate-200 rounded-lg flex-1 bg-white relative" id="gantt-wrapper"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;table class="w-full text-left text-xs border-collapse" id="gantt-table"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!-- JSで動的生成 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 右側: 分析ダッシュボード (4列) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;section class="lg:col-span-4 space-y-4"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- KPIカード群 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="grid grid-cols-2 gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white p-3 rounded-xl shadow border border-slate-200 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-xs text-slate-500"&gt;全体進捗率&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-2xl font-black text-blue-600 mt-1" id="kpi-progress"&gt;0%&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white p-3 rounded-xl shadow border border-slate-200 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-xs text-slate-500"&gt;最重要CP進行状況&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-2xl font-black text-emerald-600 mt-1" id="kpi-cp-status"&gt;0/0&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- 遅延タスク検出＆スクロール通知 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-white rounded-xl shadow border border-red-200 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold text-red-600 text-sm flex items-center gap-1.5 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-triangle-exclamation"&gt;&lt;/i&gt; 遅延・警告タスク</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="delayed-tasks-list" class="space-y-1.5 max-h-36 overflow-y-auto pr-1 text-xs"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!-- JSで動的生成 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- 会社別負荷 (Chart.js) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-white rounded-xl shadow border border-slate-200 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-chart-pie text-indigo-500"&gt;&lt;/i&gt; 関係会社別タスク負荷</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="relative h-48"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;canvas id="companyChart"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- 保留タスク一覧 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-white rounded-xl shadow border border-slate-200 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold text-amber-600 text-sm flex items-center gap-1.5 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;i class="fa-solid fa-pause-circle"&gt;&lt;/i&gt; 保留中タスク</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;ul id="pending-tasks-list" class="space-y-1.5 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;!-- JSで動的生成 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/section&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/main&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- タスク追加/編集モーダル --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold text-sm" id="modal-title"&gt;タスク追加&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="closeTaskModal()" class="text-slate-400 hover:text-white"&gt;&lt;i class="fa-solid fa-xmark"&gt;&lt;/i&gt;&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;form id="task-form" onsubmit="handleTaskSubmit(event)" class="p-4 space-y-3 text-xs"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;input type="hidden" id="task-id-key"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="block font-semibold mb-1"&gt;ID (例: 1.3)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input type="text" id="task-id" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="block font-semibold mb-1"&gt;カテゴリー&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;select id="task-cat" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="1"&gt;📂 1: 車両仕様確定・設計&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="2"&gt;📂 2: ブースデザイン・施工手配&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="3"&gt;📂 3: 制御システム開発&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="4"&gt;📂 4: 現場施工・テスト&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="5"&gt;📂 5: グランドオープン・運用&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="block font-semibold mb-1"&gt;タスク名&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;input type="text" id="task-name" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label class="block font-semibold mb-1"&gt;担当会社&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;select id="task-assignee" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="トヨタ自動車"&gt;トヨタ自動車&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="デンソー"&gt;デンソー&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="デザイン会社"&gt;デザイン会社&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="全社合同"&gt;全社合同&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="grid grid-cols-2 gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label class="block font-semibold mb-1"&gt;開始日&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="date" id="task-start" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label class="block font-semibold mb-1"&gt;終了日&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="date" id="task-end" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="grid grid-cols-2 gap-2 items-center pt-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label class="block font-semibold mb-1"&gt;ステータス&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;select id="task-status" required class="w-full border rounded px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="未着手"&gt;未着手&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="進行中"&gt;進行中&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="保留中"&gt;保留中&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="完了"&gt;完了&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="flex items-center pt-5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="checkbox" id="task-cp" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label for="task-cp" class="ml-2 font-semibold text-red-600 flex items-center gap-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;i class="fa-solid fa-star"&gt;&lt;/i&gt; 最重要CP(クリティカルパス)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="flex justify-end gap-2 pt-3 border-t"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button type="button" onclick="closeTaskModal()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded font-semibold text-slate-700"&gt;キャンセル&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"&gt;保存する&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- 管理者メニュー モーダル --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h3 class="font-bold text-sm flex items-center gap-2"&gt;&lt;i class="fa-solid fa-lock text-amber-400"&gt;&lt;/i&gt; 管理者メニュー (裏メニュー)&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"&gt;&lt;i class="fa-solid fa-xmark"&gt;&lt;/i&gt;&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- パスワード認証画面 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="admin-auth" class="p-6 text-center text-xs space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p class="text-slate-600"&gt;管理者認証が必要です。パスワードを入力してください。&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;input type="password" id="admin-pass" placeholder="パスワード (初期: 0705)" class="border border-slate-300 rounded px-3 py-2 w-48 text-center text-base outline-none focus:ring-2 focus:ring-slate-800"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="verifyAdminPass()" class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 font-semibold transition"&gt;認証する&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- 管理機能画面 (認証後表示) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="admin-panel" class="p-5 hidden space-y-4 text-xs"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="p-3 bg-slate-50 border rounded-lg space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h4 class="font-bold text-slate-800 flex items-center gap-1"&gt;&lt;i class="fa-solid fa-database"&gt;&lt;/i&gt; データバックアップ＆復元&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button onclick="createBackup()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded font-semibold transition"&gt;&lt;i class="fa-solid fa-download"&gt;&lt;/i&gt; バックアップ作成&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded font-semibold transition text-center cursor-pointer"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;i class="fa-solid fa-upload"&gt;&lt;/i&gt; バックアップ復元</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input type="file" id="restore-file" onchange="restoreBackup(event)" class="hidden" accept=".json"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="clearDatabase()" class="w-full bg-red-500 hover:bg-red-600 text-white py-1.5 rounded font-semibold transition mt-1"&gt;&lt;i class="fa-solid fa-trash"&gt;&lt;/i&gt; データベース完全初期化&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="p-3 bg-slate-50 border rounded-lg space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h4 class="font-bold text-slate-800 flex items-center gap-1"&gt;&lt;i class="fa-solid fa-list-ol"&gt;&lt;/i&gt; ID一括振り直し&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p class="text-slate-500"&gt;カテゴリーごとに ID を 1.1, 1.2..., 2.1, 2.2... と自動で整列し直します。&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="reorderTaskIDs()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded font-semibold transition"&gt;&lt;i class="fa-solid fa-wand-magic-sparkles"&gt;&lt;/i&gt; ID一括自動振り直し実行&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="p-3 bg-slate-50 border rounded-lg space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h4 class="font-bold text-slate-800 flex items-center gap-1"&gt;&lt;i class="fa-solid fa-code"&gt;&lt;/i&gt; システムソースコード&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button onclick="copyHTMLCode()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-1.5 rounded font-semibold transition"&gt;&lt;i class="fa-solid fa-copy"&gt;&lt;/i&gt; 完全版HTMLコードをコピー&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- JavaScript メインロジック --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 1. 基本設定＆初期データ定義</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const CONFIG = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adminPass: "0705",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>startDate: "2026-09-01",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>endDate: "2027-03-31",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>targetDate: "2026-12-15"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// カテゴリー定義</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const CATEGORIES = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>1: "📂 カテゴリー 1：車両仕様確定・設計",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>2: "📂 カテゴリー 2：ブースデザイン・施工手配",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>3: "📂 カテゴリー 3：制御システム開発",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>4: "📂 カテゴリー 4：現場施工・テスト",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>5: "📂 カテゴリー 5：グランドオープン・運用"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// デフォルト初期データ（Firebase未接続時や初期化時に使用）</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const INITIAL_TASKS = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t1", id: "1.1", cat: 1, name: "基本仕様打ち合わせ", assignee: "トヨタ自動車", start: "2026-09-01", end: "2026-09-15", status: "完了", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t2", id: "1.2", cat: 1, name: "制御通信プロトコル策定", assignee: "デンソー", start: "2026-09-10", end: "2026-09-30", status: "進行中", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t3", id: "1.3", cat: 1, name: "展示用車両改造・配線設計", assignee: "トヨタ自動車", start: "2026-09-20", end: "2026-10-20", status: "未着手", cp: false },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t4", id: "2.1", cat: 2, name: "展示ブース空間デザイン", assignee: "デザイン会社", start: "2026-09-15", end: "2026-10-15", status: "進行中", cp: false },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t5", id: "2.2", cat: 2, name: "資材手配＆施工チーム確定", assignee: "デザイン会社", start: "2026-10-10", end: "2026-11-05", status: "未着手", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t6", id: "3.1", cat: 3, name: "EV情報表示モニターアプリ開発", assignee: "デンソー", start: "2026-09-25", end: "2026-11-15", status: "進行中", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t7", id: "3.2", cat: 3, name: "体験用シミュレータ連動検証", assignee: "デンソー", start: "2026-11-01", end: "2026-11-25", status: "保留中", cp: false },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t8", id: "4.1", cat: 4, name: "会場ブース設営施工", assignee: "デザイン会社", start: "2026-11-20", end: "2026-12-05", status: "未着手", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t9", id: "4.2", cat: 4, name: "全社合同 総合リハーサル", assignee: "全社合同", start: "2026-12-06", end: "2026-12-12", status: "未着手", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t10", id: "5.1", cat: 5, name: "グランドオープン・メディア対応", assignee: "全社合同", start: "2026-12-15", end: "2026-12-20", status: "未着手", cp: true },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ idKey: "t11", id: "5.2", cat: 5, name: "会期中運用＆システム保守", assignee: "全社合同", start: "2026-12-21", end: "2027-03-31", status: "未着手", cp: false }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 2. Firebase 初期設定</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ※ 実際のプロジェクト用Firebase設定値に差し替えてください。</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const firebaseConfig = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>apiKey: "YOUR_API_KEY",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>authDomain: "YOUR_PROJECT.firebaseapp.com",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>projectId: "YOUR_PROJECT",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>storageBucket: "YOUR_PROJECT.appspot.com",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>messagingSenderId: "123456789",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>appId: "1:123456789:web:abcdef"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let tasksData = [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let dbRef = null;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let isFirebaseConnected = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Firebase 初期化試行</p>
+<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (firebaseConfig.databaseURL &amp;&amp; !firebaseConfig.databaseURL.includes("YOUR_PROJECT")) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>firebase.initializeApp(firebaseConfig);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dbRef = firebase.database().ref("gantt_tasks");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>isFirebaseConnected = true;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>console.warn("Firebase初期化スキップ: ローカルストレージ動作に切り替えます。", e);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 3. アプリケーション初期化 ＆ リアルタイム同期</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener("DOMContentLoaded", () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>initCompanyChart();</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (isFirebaseConnected &amp;&amp; dbRef) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Firebase リアルタイム同期監視</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("sync-text").innerText = "Firebase 連携中";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("sync-dot").className = "w-2 h-2 rounded-full bg-emerald-500 animate-ping";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>dbRef.on("value", (snapshot) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const val = snapshot.val();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (val) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>tasksData = Array.isArray(val) ? val : Object.values(val);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 初回データ未登録の場合、初期データ投入</p>
+<p class="p1"><span class="Apple-converted-space">            </span>tasksData = INITIAL_TASKS;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dbRef.set(tasksData);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>refreshUI();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// ローカルストレージ運用フォールバック</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("sync-text").innerText = "ローカル動作中";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("sync-dot").className = "w-2 h-2 rounded-full bg-blue-500";</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const local = localStorage.getItem("gantt_tasks_local");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (local) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>tasksData = JSON.parse(local);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>tasksData = INITIAL_TASKS;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>saveTasksLocally();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>refreshUI();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function saveTasksData() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (isFirebaseConnected &amp;&amp; dbRef) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dbRef.set(tasksData);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>saveTasksLocally();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>refreshUI();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function saveTasksLocally() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>localStorage.setItem("gantt_tasks_local", JSON.stringify(tasksData));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function refreshUI() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderGantt();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>updateDashboard();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 4. ガントチャート描画ロジック</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function renderGantt() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const searchKeyword = document.getElementById("search-input").value.toLowerCase();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const table = document.getElementById("gantt-table");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>table.innerHTML = "";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 日付リストの生成 (2026-09-01 〜 2027-03-31)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dateList = generateDateArray(CONFIG.startDate, CONFIG.endDate);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// --- テーブルヘッダー構築 ---</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let thead = `&lt;thead class="sticky-header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;th class="p-2 border-r border-slate-300 sticky-col min-w-[200px]"&gt;ID / タスク名&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;th class="p-2 border-r border-slate-300 w-20 text-center"&gt;担当&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;th class="p-2 border-r border-slate-300 w-20 text-center"&gt;状態&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;th class="p-2 border-r border-slate-300 w-16 text-center"&gt;操作&lt;/th&gt;`;</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>dateList.forEach(d =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const isTarget = d === CONFIG.targetDate;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const bg = isTarget ? "bg-amber-300 text-slate-900" : "bg-slate-100 text-slate-600";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>thead += `&lt;th class="px-1 py-1 text-[10px] text-center border-r border-slate-200 min-w-[24px] ${bg}"&gt;${d.slice(5)}&lt;/th&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>thead += `&lt;/tr&gt;&lt;/thead&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// --- テーブルボディ構築 ---</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let tbody = `&lt;tbody&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// カテゴリーごとにグループ化</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let catKey = 1; catKey &lt;= 5; catKey++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const catTasks = tasksData.filter(t =&gt; t.cat == catKey &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>t.name.toLowerCase().includes(searchKeyword) ||<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>t.assignee.toLowerCase().includes(searchKeyword) ||</p>
+<p class="p1"><span class="Apple-converted-space">          </span>t.id.includes(searchKeyword)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// カテゴリーヘッダー行</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tbody += `&lt;tr class="bg-slate-800 text-white font-bold"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;td colspan="${4 + dateList.length}" class="p-2 text-xs sticky-col"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>${CATEGORIES[catKey]}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/tr&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (catTasks.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>tbody += `&lt;tr&gt;&lt;td colspan="${4 + dateList.length}" class="p-2 text-slate-400 italic text-center"&gt;該当するタスクはありません&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>catTasks.forEach(task =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const isDelayed = checkIsDelayed(task);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const statusColor = getStatusColorClass(task.status);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>tbody += `&lt;tr id="task-row-${task.idKey}" class="hover:bg-slate-50 border-b border-slate-200 transition"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;!-- タスク基本情報 (固定列) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;td class="p-2 border-r border-slate-200 sticky-col font-medium flex items-center gap-1.5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>${task.cp ? '&lt;i class="fa-solid fa-star text-red-500" title="クリティカルパス"&gt;&lt;/i&gt;' : ''}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span class="text-slate-500 text-[11px] font-mono"&gt;${task.id}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span class="${isDelayed ? 'text-red-600 font-bold' : 'text-slate-800'}"&gt;${escapeHTML(task.name)}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;td class="p-1 border-r border-slate-200 text-center text-[11px]"&gt;${escapeHTML(task.assignee)}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;td class="p-1 border-r border-slate-200 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white ${statusColor}"&gt;${task.status}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;td class="p-1 border-r border-slate-200 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="openEditTaskModal('${task.idKey}')" class="text-blue-600 hover:text-blue-800 mr-1"&gt;&lt;i class="fa-solid fa-pen-to-square"&gt;&lt;/i&gt;&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="deleteTask('${task.idKey}')" class="text-red-500 hover:text-red-700"&gt;&lt;i class="fa-solid fa-trash"&gt;&lt;/i&gt;&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/td&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// ガントチャートバーセル描画</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dateList.forEach(d =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const inRange = d &gt;= task.start &amp;&amp; d &lt;= task.end;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>let cellBg = "";</p>
+<p class="p1"><span class="Apple-converted-space">              </span>if (inRange) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (task.status === "完了") cellBg = "bg-emerald-500";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else if (task.status === "保留中") cellBg = "bg-amber-400";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else if (isDelayed) cellBg = "bg-red-500 animate-pulse";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else cellBg = "bg-blue-500";</p>
+<p class="p1"><span class="Apple-converted-space">              </span>}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const isTargetDay = d === CONFIG.targetDate;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const borderStyle = isTargetDay ? "border-x-2 border-x-amber-400" : "border-r border-slate-100";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>tbody += `&lt;td class="p-0 text-center ${borderStyle} ${cellBg}" title="${task.name} (${task.start} 〜 ${task.end})"&gt;&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>tbody += `&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>tbody += `&lt;/tbody&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>table.innerHTML = thead + tbody;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 5. 自動集計ダッシュボード ロジック</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let companyChartInstance = null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function updateDashboard() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (tasksData.length === 0) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 1. 全体進捗率の計算</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const completedCount = tasksData.filter(t =&gt; t.status === "完了").length;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const overallProgress = Math.round((completedCount / tasksData.length) * 100);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("kpi-progress").innerText = `${overallProgress}%`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 2. クリティカルパス(CP)進行状況</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const cpTasks = tasksData.filter(t =&gt; t.cp);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const cpCompleted = cpTasks.filter(t =&gt; t.status === "完了").length;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("kpi-cp-status").innerText = `${cpCompleted} / ${cpTasks.length}`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 3. 遅延タスク検出＆リスト表示</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const delayedTasks = tasksData.filter(t =&gt; checkIsDelayed(t));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const delayedContainer = document.getElementById("delayed-tasks-list");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (delayedTasks.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>delayedContainer.innerHTML = `&lt;p class="text-slate-400 italic"&gt;遅延タスクはありません&lt;/p&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>delayedContainer.innerHTML = delayedTasks.map(t =&gt; `</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div onclick="scrollToTask('${t.idKey}')" class="p-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded cursor-pointer transition flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span class="font-bold text-red-700"&gt;${t.id} ${escapeHTML(t.name)}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;p class="text-[10px] text-red-500"&gt;期限: ${t.end} (${t.assignee})&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;i class="fa-solid fa-arrow-right-to-bracket text-red-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>`).join("");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 4. 保留タスク一覧表示</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pendingTasks = tasksData.filter(t =&gt; t.status === "保留中");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pendingContainer = document.getElementById("pending-tasks-list");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (pendingTasks.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pendingContainer.innerHTML = `&lt;p class="text-slate-400 italic"&gt;保留中のタスクはありません&lt;/p&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>pendingContainer.innerHTML = pendingTasks.map(t =&gt; `</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;li class="py-1 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="font-medium"&gt;${t.id} ${escapeHTML(t.name)}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="text-slate-400 text-[10px]"&gt;${t.assignee}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>`).join("");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 5. 会社別タスク負荷グラフ (Chart.js)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>updateCompanyChart();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function initCompanyChart() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const ctx = document.getElementById("companyChart").getContext("2d");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>companyChartInstance = new Chart(ctx, {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>type: "doughnut",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>data: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>labels: [],</p>
+<p class="p1"><span class="Apple-converted-space">          </span>datasets: [{</p>
+<p class="p1"><span class="Apple-converted-space">            </span>data: [],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}]</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>options: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>responsive: true,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>maintainAspectRatio: false,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>plugins: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } }</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function updateCompanyChart() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!companyChartInstance) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const companyCounts = {};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>tasksData.forEach(t =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>companyCounts[t.assignee] = (companyCounts[t.assignee] || 0) + 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>companyChartInstance.data.labels = Object.keys(companyCounts);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>companyChartInstance.data.datasets[0].data = Object.values(companyCounts);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>companyChartInstance.update();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 遅延タスクへのスムーススクロール移動</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function scrollToTask(idKey) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const row = document.getElementById(`task-row-${idKey}`);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (row) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>row.scrollIntoView({ behavior: "smooth", block: "center" });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>row.classList.add("bg-amber-100");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setTimeout(() =&gt; row.classList.remove("bg-amber-100"), 2000);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 6. モーダル &amp; タスク CRUD 操作</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function openAddTaskModal() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("modal-title").innerText = "タスク新規追加";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-form").reset();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-id-key").value = "";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-modal").classList.remove("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function openEditTaskModal(idKey) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const task = tasksData.find(t =&gt; t.idKey === idKey);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!task) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("modal-title").innerText = "タスク編集";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-id-key").value = task.idKey;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-id").value = task.id;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-cat").value = task.cat;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-name").value = task.name;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-assignee").value = task.assignee;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-start").value = task.start;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-end").value = task.end;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-status").value = task.status;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-cp").checked = task.cp;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-modal").classList.remove("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function closeTaskModal() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("task-modal").classList.add("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function handleTaskSubmit(e) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const idKey = document.getElementById("task-id-key").value || "t_" + Date.now();</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const newTask = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>idKey: idKey,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>id: document.getElementById("task-id").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cat: parseInt(document.getElementById("task-cat").value),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>name: document.getElementById("task-name").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>assignee: document.getElementById("task-assignee").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>start: document.getElementById("task-start").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>end: document.getElementById("task-end").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status: document.getElementById("task-status").value,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cp: document.getElementById("task-cp").checked</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const existingIndex = tasksData.findIndex(t =&gt; t.idKey === idKey);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (existingIndex &gt;= 0) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tasksData[existingIndex] = newTask;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tasksData.push(newTask);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>saveTasksData();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>closeTaskModal();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function deleteTask(idKey) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (confirm("このタスクを削除してもよろしいですか？")) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tasksData = tasksData.filter(t =&gt; t.idKey !== idKey);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>saveTasksData();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 7. 管理者裏メニュー機能</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function openAdminModal() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("admin-modal").classList.remove("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function closeAdminModal() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById("admin-modal").classList.add("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function verifyAdminPass() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pass = document.getElementById("admin-pass").value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (pass === CONFIG.adminPass) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("admin-auth").classList.add("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("admin-panel").classList.remove("hidden");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>alert("パスワードが正しくありません。");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// データバックアップ作成</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function createBackup() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasksData, null, 2));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const downloadAnchor = document.createElement("a");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadAnchor.setAttribute("href", dataStr);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadAnchor.setAttribute("download", `gantt_backup_${new Date().toISOString().slice(0,10)}.json`);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.body.appendChild(downloadAnchor);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadAnchor.click();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>downloadAnchor.remove();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// バックアップ復元</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function restoreBackup(event) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const file = event.target.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!file) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const reader = new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>reader.onload = function(e) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const importedData = JSON.parse(e.target.result);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (Array.isArray(importedData)) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>tasksData = importedData;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>saveTasksData();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>alert("バックアップデータを正常に復元しました。");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>alert("無効なファイル形式です。");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} catch (err) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>alert("JSONの読み込みに失敗しました。");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>reader.readAsText(file);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// データベース初期化</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function clearDatabase() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (confirm("本当にすべてのタスクデータを消去して初期化しますか？")) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tasksData = INITIAL_TASKS;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>saveTasksData();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>alert("データベースを初期化しました。");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ID一括自動振り直し</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function reorderTaskIDs() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let catKey = 1; catKey &lt;= 5; catKey++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let subId = 1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tasksData.forEach(task =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (task.cat == catKey) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>task.id = `${catKey}.${subId++}`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>saveTasksData();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>alert("全タスクのIDをカテゴリー順に整列して振り直しました。");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// HTMLソースコードコピー</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function copyHTMLCode() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const htmlContent = document.documentElement.outerHTML;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>navigator.clipboard.writeText(htmlContent).then(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>alert("完全版HTMLコードをクリップボードにコピーしました！");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 8. マニュアルダウンロード機能</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function downloadManual() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const manualContent = `================================================================</p>
+<p class="p1">【取扱説明書】リアルタイム共有・自動集計ガントチャートシステム</p>
+<p class="p1">================================================================</p>
+<p class="p2"><br></p>
+<p class="p1">本システムは、複数メンバーでのリアルタイム工程共有およびプロジェクト進行管理を</p>
+<p class="p1">滑らかに行うためのWebアプリケーションです。</p>
+<p class="p2"><br></p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">1. 基本機能と見方</p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">■ ガントチャートエリア（画面左）</p>
+<p class="p1">・各タスクの進行期間がバーで可視化されます。</p>
+<p class="p1">・赤星マーク(★)が付いているタスクは最重要クリティカルパス(CP)です。</p>
+<p class="p1">・目標日（2026年12月15日）には目立つ黄色ハイライト線が配置されています。</p>
+<p class="p2"><br></p>
+<p class="p1">■ 分析ダッシュボード（画面右）</p>
+<p class="p1">・全体進捗率：完了タスクの割合を自動集計します。</p>
+<p class="p1">・CP進行状況：プロジェクトの成功に直結するCPタスクの達成数を表示します。</p>
+<p class="p1">・遅延・警告タスク：現在日付時点で未完了かつ期限超過しているタスクを自動検出します。</p>
+<p class="p1"><span class="Apple-converted-space">  </span>※クリックすると該当のタスクへスムーズに画面がスクロールします。</p>
+<p class="p1">・会社別負荷：関係会社ごとのタスク割り当て数を円グラフで可視化します。</p>
+<p class="p2"><br></p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">2. タスクの追加・編集・削除</p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">・画面右上の「+ タスク追加」ボタンから新規タスクを登録できます。</p>
+<p class="p1">・各タスク行のペンアイコンで内容編集、ゴミ箱アイコンで削除が可能です。</p>
+<p class="p1">・変更内容はFirebaseを通じて共有者に即座にリアルタイム反映されます。</p>
+<p class="p2"><br></p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">3. 管理者メニュー（裏メニュー）</p>
+<p class="p1">----------------------------------------------------------------</p>
+<p class="p1">・画面右上の「管理者メニュー」ボタンからアクセスします。</p>
+<p class="p1">・初期パスワード: 0705</p>
+<p class="p1">・機能：データバックアップ（JSON出力）、復元、ID一括自動整列、コードコピー</p>
+<p class="p2"><br></p>
+<p class="p1">発行元: トヨタ自動車 新型EV展示プロジェクト事務局</p>
+<p class="p1">`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const blob = new Blob([manualContent], { type: "text/plain;charset=utf-8" });</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const a = document.createElement("a");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>a.href = URL.createObjectURL(blob);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>a.download = "ガントチャートシステム_操作マニュアル.txt";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>a.click();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>/* -------------------------------------------------------------</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* 9. ユーティリティ関数</p>
+<p class="p1"><span class="Apple-converted-space">     </span>* ------------------------------------------------------------- */</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function generateDateArray(startStr, endStr) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dates = [];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let curr = new Date(startStr);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const end = new Date(endStr);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>while (curr &lt;= end) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dates.push(curr.toISOString().split("T")[0]);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>curr.setDate(curr.getDate() + 1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return dates;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function checkIsDelayed(task) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (task.status === "完了") return false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const today = new Date().toISOString().split("T")[0];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return task.end &lt; today;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function getStatusColorClass(status) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>switch (status) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case "完了": return "bg-emerald-500";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case "進行中": return "bg-blue-500";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>case "保留中": return "bg-amber-500";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>default: return "bg-slate-400";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function escapeHTML(str) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return str.replace(/[&amp;&lt;&gt;"']/g, function(m) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return { '&amp;': '&amp;amp;', '&lt;': '&amp;lt;', '&gt;': '&amp;gt;', '"': '&amp;quot;', "'": '&amp;#39;' }[m];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
